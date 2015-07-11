@@ -1,0 +1,132 @@
+/*
+ 
+rules = 
+[
+    [a('append',[c('nil'),v('X'),v('X')])],
+
+    [a('append',[a('cons', [v('H'),v('X')]), 
+                 v('Y'), 
+                 a('cons', [v('H'),v('Z')])]),
+       a('append',[v('X'), v('Y'), v('Z')])]
+]
+
+goal = 
+a('append',[
+    a('cons',[c('1'), a('cons',[c('2'), c('nil')])]),
+    a('cons',[c('3'), a('cons',[c('4'), c('nil')])]),
+    v('Z')
+])
+
+ */
+
+start
+  = space* p:prog space* { return p; }
+    
+
+space
+  = [ \t\r\n]
+  / comment
+
+ispace = [ \t] / comment
+
+newline
+  = [r\n]
+
+comment
+  = "%" [^\r\n]*
+
+prog = ps:clause+ { return {clauses: ps}; }
+
+/*
+goal = ":-" ispace* g:terms ispace* "."
+*/
+
+clause 
+  = fact:atom "." newline {return [fact]; }
+  / head:atom space* ":-" space* body:terms "." newline {return [head].concat(body); }
+
+term = var / atom / constant
+
+var = 
+  c:[A-Z] cs:[a-z0-9]* { return {type: 'var', id:c + cs.join('')}; }
+
+constant = 
+  cs:symbol
+  { return {type: 'const', id:cs}; }
+
+symbol = 
+  c:[a-z] cs:[a-z0-9]* 
+  { return c + cs.join(''); }
+
+atom = 
+  cs:symbol "(" ps:terms ")"
+  { return {type:'atom', id: cs, params:ps}; }
+
+terms = 
+  t1:term "," t2:term "," t3:term { return [t1,t2, t3];}
+  / t1:term "," t2:term { return [t1,t2];} 
+  / t:term { return [t];}
+
+
+
+
+
+
+
+
+
+---
+
+dutch(manu,fred).
+clever(Xor,Y) :- dutch(Xor,Y).
+---
+{
+   "clauses": [
+      [
+         {
+            "type": "atom",
+            "id": "dutch",
+            "params": [
+               {
+                  "type": "const",
+                  "id": "manu"
+               },
+               {
+                  "type": "const",
+                  "id": "fred"
+               }
+            ]
+         }
+      ],
+      [
+         {
+            "type": "atom",
+            "id": "clever",
+            "params": [
+               {
+                  "type": "var",
+                  "id": "Xor"
+               },
+               {
+                  "type": "var",
+                  "id": "Y"
+               }
+            ]
+         },
+         {
+            "type": "atom",
+            "id": "dutch",
+            "params": [
+               {
+                  "type": "var",
+                  "id": "Xor"
+               },
+               {
+                  "type": "var",
+                  "id": "Y"
+               }
+            ]
+         }
+      ]
+   ]
+}
