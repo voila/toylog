@@ -317,28 +317,24 @@ function rename(rule){
 }
 
 
-//
-function otherSol(vars, vals){
-    if(vars.length == 0)
-        return true;
-    if(vals.length > 0){
-        var s = [];
-        for(var i=0;i<vars.length; i++){
-            s.push(pprint(vars[i]) + "=" +pprint(vals[i]));
+// solver
+function solve(goal, rules, disp, next) {
+    var goalVars = termVars(goal); // list of {type:var,...} in goal
+    function otherSol(vars, vals){
+        if(vars.length == 0)
+            return true;
+        if(vals.length > 0){
+            for(var i=0;i<vars.length; i++){
+                console.log(pprint(vars[i]) + " = " + pprint(vals[i]));
+                if(disp) disp(pprint(vars[i]) + " = " + pprint(vals[i]));
+                return next && next() ? false : true;
+            }
+            return false;
         }
-        
-        //console.log(s);
-        //return false;
         return false;
     }
-    return false;
-}
 
-// solver
-function solve(goal, rules) {
-    var goalVars = termVars(goal);
-
-  function solveGoals(goals, vals){
+    function solveGoals(goals, vals){
       if(goals.length == 0){
          return otherSol(goalVars, vals);
       }
@@ -366,7 +362,9 @@ function solve(goal, rules) {
       return sol;
   }
 
-  return solveGoals([goal], goalVars);
+  var s = solveGoals([goal], goalVars);
+  return s;
+
 }
 
 

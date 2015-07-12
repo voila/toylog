@@ -1,7 +1,7 @@
 <html>
 <head></head>
 <style>
-
+#msg { border: 1px solid red;}
 
 </style>
 <script src="solve.js"></script>
@@ -13,56 +13,74 @@
     var parse = PARSER.parse;
     //var assert = chai.assert;
 
-    var fmtSol = function(sols){
-       return sols.refutation ?
-       'No' :
-       'Yes<br /><br />' + sols.subst;
+    // used to display different solutions incrementally
+    function displaySol(str){
+      $("#msg").append(str + "<br />");
+    }
+
+    function nextSol(){
+      return confirm("Next Solution?");
+    }
+    function ask(){
+      try {
+        var p = parse($("#prog").val()).clauses;
+        var g = parse($("#query").val()).clauses[0][0];
+        $("#msg").empty();
+        var s = solve(g, p, displaySol, nextSol);
+        $("#msg").append(s ? 'Yes' : 'No');
+      }
+      catch(e){
+       $("#msg").html(e.toString());
+       //console.log(e.toString());
+      }
+    }
+
+
+    var examples = {
+       append : { 
+         prog: [
+            ["append(nil,L,L).\n"],
+            ["append(cons(H,L1),L2,cons(H,L3)) :- append(L1,L2,L3).\n"]
+         ],
+         query: "append(cons(a,cons(b,nil)),cons(c,cons(d,nil)),Y).\n"
+       },
+       gods : {
+         prog: [
+            ["mother(gaia,cronos).\n"],
+            ["mother(rhea,zeus).\n"],
+            ["mother(rhea,hades).\n"],
+            ["father(zeus,pollux).\n"],
+            ["father(cronos,zeus).\n"],
+            ["father(ouranos,cronos).\n"],
+            ["father(zeus,helene).\n"],
+            ["father(zeus,castor).\n"],
+            ["parent(X,Y) :- father(X,Y).\n"],
+            ["parent(X,Y) :- mother(X,Y).\n"],
+            ["grandparent(X,Z) :- parent(X,Y),parent(Y,Z).\n"]
+         ],
+         query: ["grandparent(cronos,X).\n"]
+       }
     }
 
     // UI handlers
     $(function(){
-    var p;
-    $("#prog").on("blur", function(){
-      try {
-        console.log($(this).val());
-        p = parse($(this).val()).clauses;
-        $("#prog-msg").html("sweet!");
-       
-      }
-      catch(e){
-       $("#prog-msg").html(e.toString());
-       //console.log(e.toString());
-      }
+       $("#ask").click(ask);
+
+       $("#examples").on('change', function() {
+           $("#prog").html(examples[this.value].prog);
+           $("#query").html(examples[this.value].query);
+       });
     });
 
-
-     $("#query").on("blur", function(){
-      try {
-        console.log($(this).val());
-        var g = parse($(this).val()).clauses[0][0];
-        var s = solve(g, p);
-        
-        $("#query-msg").html(fmtSol(s));
-       
-      }
-      catch(e){
-       $("#query-msg").html(e.toString());
-       //console.log(e.toString());
-      }
-    });
-
-
-    });
-
-/*
-append(nil,L,L).
-append(cons(H,L1),L2,cons(H,L3)) :- append(L1,L2,L3).
-
-append(cons(a,cons(b,nil)),cons(c,cons(d,nil)),Y).
-*/  
 </script>
 <body>
 
+<p>
+<select id="examples">
+    <option value="append">append</option>
+    <option value="gods">gods</option>
+</select>
+</p>
 
 <textarea id="prog" rows="15" cols="55">
 append(nil,L,L).
@@ -70,14 +88,13 @@ append(cons(H,L1),L2,cons(H,L3)) :- append(L1,L2,L3).
 
 </textarea>
 
-<p id="prog-msg"></p>
-
+<br />
 <textarea id="query" rows="5" cols="55">
 append(cons(a,cons(b,nil)),cons(c,cons(d,nil)),Y).
 
 </textarea>
+<p><button id="ask">Ask</button></p>
 
-
-<p id="query-msg"></p>
+<p id="msg"></p>
 
 </body>
