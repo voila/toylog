@@ -42,91 +42,68 @@ goal = ":-" ispace* g:terms ispace* "."
 */
 
 clause 
-  = fact:atom "." newline {return [fact]; }
-  / head:atom space* ":-" space* body:terms "." newline {return [head].concat(body); }
+  = fact:atom "." space+ {return [fact]; }
+  / head:atom space* ":-" space* body:terms "." space+ {return [head].concat(body); }
 
-term = var / atom / constant
+
+
+term = space* v:var space* { return v }
+  / space* a:atom space* { return a }
+  / space* c:constant space* { return c }
+
+list =
+   "[" space* "]" {return {type: 'const', id:'nil'}}
+
+ / "[" x:elem "|" l:listv "]" 
+    {return {type: 'atom', id:'cons', params: [x, l]}}
+
+ / "[" xs:elems "]" {return xs}
+
+
+listv = list / var
+
+elems = 
+   x:elem "," xs:elems { return {type: 'atom', id:'cons', params: [x, xs]} }
+  / x:elem { return {type: 'atom', id:'cons', params: [x, {type: 'const', id:'nil'}]}}
+
+elem =
+   space* t:term space* {return t}
+     
+
 
 var = 
-  c:[A-Z] cs:[a-z0-9]* { return {type: 'var', id:c + cs.join('')}; }
+  '_' {return {type: 'var', id:'__'}}
+  / c:[A-Z] cs:[a-z0-9]* { return {type: 'var', id:c + cs.join('')}; }
 
 constant = 
-  cs:symbol
-  { return {type: 'const', id:cs}; }
+   n:number { return {type: 'const', id:n}; }
+ / cs:symbol
+   { return {type: 'const', id:cs}; }
+
+
+number
+  = l:[0-9]* '.' r:[0-9]+  
+    { return parseFloat(l.join('') + '.' + r.join('')); }
+  / n:[0-9]+ 
+    {return parseInt(n.join('')); }
 
 symbol = 
-  c:[a-z] cs:[a-z0-9]* 
+  c:[a-z] cs:[a-z0-9_]* 
   { return c + cs.join(''); }
 
 atom = 
   cs:symbol "(" ps:terms ")"
   { return {type:'atom', id: cs, params:ps}; }
+ / list
 
+terms = 
+  t:term "," ts:terms { return [t].concat(ts);}
+  / t:term { return [t];}
+
+
+/*
 terms = 
   t1:term "," t2:term "," t3:term { return [t1,t2, t3];}
   / t1:term "," t2:term { return [t1,t2];} 
   / t:term { return [t];}
-
-
-
-
-
-
-
-
-
----
-
-dutch(manu,fred).
-clever(Xor,Y) :- dutch(Xor,Y).
----
-{
-   "clauses": [
-      [
-         {
-            "type": "atom",
-            "id": "dutch",
-            "params": [
-               {
-                  "type": "const",
-                  "id": "manu"
-               },
-               {
-                  "type": "const",
-                  "id": "fred"
-               }
-            ]
-         }
-      ],
-      [
-         {
-            "type": "atom",
-            "id": "clever",
-            "params": [
-               {
-                  "type": "var",
-                  "id": "Xor"
-               },
-               {
-                  "type": "var",
-                  "id": "Y"
-               }
-            ]
-         },
-         {
-            "type": "atom",
-            "id": "dutch",
-            "params": [
-               {
-                  "type": "var",
-                  "id": "Xor"
-               },
-               {
-                  "type": "var",
-                  "id": "Y"
-               }
-            ]
-         }
-      ]
-   ]
-}
+*/
