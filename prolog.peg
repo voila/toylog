@@ -72,7 +72,7 @@ elem =
 
 
 var = 
-  '_' {return {type: 'var', id:'__'}}
+  '_' {return {type: 'var', id:'_'}}
   / c:[A-Z] cs:[a-z0-9]* { return {type: 'var', id:c + cs.join('')}; }
 
 constant = 

@@ -100,8 +100,19 @@ function member(eq, x, l) {
     return false;
 }
 
+function renameTerm_(t){
+    if(is_v(t) && tid(t) === '_') 
+        return v(fresh()); 
+    if(is_v(t) || is_c(t))
+        return t;
+    if(is_a(t))
+        return a(tid(t), t.params.map(function(t){ return renameTerm_(t); }));
+}
+
 // return the list of vars in term t
 function termVars(t){
+//  if(is_v(t) && tid(t) === "_")
+//      return [v(fresh())];
   if(is_v(t))
       return [t];
   if(is_c(t))
@@ -118,6 +129,8 @@ t1 = termVars(a('cons',[v('X'), c('nil')]));
 assert.deepEqual(t1, [v('X')]);
 
 function substitute(t, subst){
+//    if(is_v(t) && tid(v) == '_')
+//        return v(fresh());
     if(is_v(t))
         return lookup(t, subst);
     if(is_c(t))
@@ -293,26 +306,37 @@ function some(f, lst){
 
 
 
-var counter = 0;
+var freshnessCounter = 0;
 function fresh(){
-    return '_var' + counter++;
+    return '_var' + freshnessCounter++;
+}
+
+function renameRule_(rule){ // a rule is a list of terms
+    return rule.map(
+        function(t){
+            return renameTerm_(t);
+        }
+    );
 }
 
 function rename(rule){
+    //
+    var rule2 = renameRule_(rule);
     // variables in rule
-    var ruleVars = rule
+    var ruleVars = rule2
         .map(function(t){ return termVars(t)})
         .reduce(function(l1, l2){ return union(l1,l2); });
-    //console.log(ruleVars);
+    
+    //console.log("RN1",ruleVars);
     // new substitution to rename the vars
     var subst = ruleVars.map(function(t){ return [tid(t), v(fresh())]; });
     //console.log(subst);
     // apply substitution
-    var renamedRule = rule.map(function(t){ 
+    var renamedRule = rule2.map(function(t){ 
         var t2 =  substitute(t, subst); 
         return t2;
     })
-    //console.log(renamedRule);
+    //console.log("RN2",renamedRule);
     return renamedRule;
 }
 
@@ -320,16 +344,18 @@ function rename(rule){
 // solver
 function solve(goal, rules, disp, next) {
     var goalVars = termVars(goal); // list of {type:var,...} in goal
+    //console.log(goalVars);
     function otherSol(vars, vals){
         if(vars.length == 0)
             return true;
         if(vals.length > 0){
+            var s = [];
             for(var i=0;i<vars.length; i++){
-                console.log(pprint(vars[i]) + " = " + pprint(vals[i]));
-                if(disp) disp(pprint(vars[i]) + " = " + pprint(vals[i]));
-                return next && next() ? false : true;
+                //console.log(pprint(vars[i]) + " = " + pprint(vals[i]));
+                s.push(pprint(vars[i]) + " = " + pprint(vals[i]));
             }
-            return false;
+            if(disp) disp(s);
+            return next && next() ? false : true;
         }
         return false;
     }
@@ -392,7 +418,7 @@ var greekGods = [
 ];
 
 // console.log(solve(a('grandparent-of',[c('cronos'),v('Z')]), greekGods));
-console.log(solve(a('grandparent-of',[v('Y'),v('Z')]), greekGods));
+//console.log(solve(a('grandparent-of',[v('Y'),v('Z')]), greekGods));
 
 
 /*
@@ -502,8 +528,8 @@ var parsedAppendProg =
    ]
 }
 
-console.log(solve(a('append',[
-    a('cons',[c('1'), a('cons',[c('2'), c('nil')])]),
-    a('cons',[c('3'), a('cons',[c('4'), c('nil')])]),
-    v('Z')
-]), parsedAppendProg.clauses));
+// console.log(solve(a('append',[
+//     a('cons',[c('1'), a('cons',[c('2'), c('nil')])]),
+//     a('cons',[c('3'), a('cons',[c('4'), c('nil')])]),
+//     v('Z')
+// ]), parsedAppendProg.clauses));
