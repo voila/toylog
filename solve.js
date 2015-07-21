@@ -320,14 +320,13 @@ function renameRule_(rule){ // a rule is a list of terms
 }
 
 function rename(rule){
-    //
+    // rename '_'
     var rule2 = renameRule_(rule);
-    // variables in rule
+    // set of variables in rule
     var ruleVars = rule2
         .map(function(t){ return termVars(t)})
         .reduce(function(l1, l2){ return union(l1,l2); });
     
-    //console.log("RN1",ruleVars);
     // new substitution to rename the vars
     var subst = ruleVars.map(function(t){ return [tid(t), v(fresh())]; });
     //console.log(subst);
@@ -336,7 +335,6 @@ function rename(rule){
         var t2 =  substitute(t, subst); 
         return t2;
     })
-    //console.log("RN2",renamedRule);
     return renamedRule;
 }
 
@@ -344,6 +342,7 @@ function rename(rule){
 // solver
 function solve(goal, rules, disp, next) {
     var goalVars = termVars(goal); // list of {type:var,...} in goal
+
     //console.log(goalVars);
     function otherSol(vars, vals){
         if(vars.length == 0)
@@ -352,7 +351,8 @@ function solve(goal, rules, disp, next) {
             var s = [];
             for(var i=0;i<vars.length; i++){
                 //console.log(pprint(vars[i]) + " = " + pprint(vals[i]));
-                s.push(pprint(vars[i]) + " = " + pprint(vals[i]));
+                if(!tid(vars[i]).startsWith('_')) // we don't care about '_' vars
+                    s.push(pprint(vars[i]) + " = " + pprint(vals[i]));
             }
             if(disp) disp(s);
             return next && next() ? false : true;
@@ -388,7 +388,7 @@ function solve(goal, rules, disp, next) {
       return sol;
   }
 
-  var s = solveGoals([goal], goalVars);
+  var s = solveGoals([renameTerm_(goal)], goalVars);
   return s;
 
 }

@@ -59,21 +59,21 @@ textarea {font-size:inherit;}
     <option value="">Examples</option>
     <option value="append">append</option>
     <option value="gods">gods</option>
-    <option value="sudoku">Sudoku 4x4</option>
     <option value="zebra">zebra</option>
+    <option value="sudoku">Sudoku 4x4</option>
 </select>
 </p>
 
 <div id="left-column">
 
   <textarea id="prog" rows="15" cols="55">
-  m(Z,[_,_,Z]).
+
   </textarea> 
   <br />
 </div> 
 <div id="right-column">
   <textarea id="query" rows="7" cols="55">
-  m(X,[1,2,3]).
+
 
   </textarea>
   <p><button id="ask">Ask</button></p>
@@ -182,10 +182,11 @@ sudoku(Puzzle, Solution) :-
          Square1, Square2, Square3, Square4]).
 </div>
 <div class="query">sudoku([
-  _, _, 2, 3,
+  4, 1, 2, 3,  
   _, _, 4, _,
-  _, _, _, _, 
-  3, 4, _, _], Solution).
+  1, _, 3, _, 
+  3, 4, _, 2], Solution).
+
 </div>
 </div>
 
@@ -199,13 +200,17 @@ select3(X, [X|Tail], Tail).
 select3(Elem, [Head|Tail], [Head|Rest]) :-
    select3(Elem, Tail, Rest).
 
-select([A|As],S):- select(A,S,S1),select3(As,S1).
+select([A|As],S):- select3(A,S,S1),select(As,S1).
 select([],_). 
  
 next_to(A,B,C):- left_of(A,B,C).
 next_to(A,B,C):- left_of(B,A,C).
 left_of(A,B,C):- append(_,[A|[B|_]],C).
  
+member(X,[X|T]).
+member(X,[Y|T]) :- member(X,T).  
+
+
 unif(X,X).
 
 zebra(Owns, Hs):- 
